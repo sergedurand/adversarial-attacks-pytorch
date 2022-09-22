@@ -34,8 +34,8 @@ class FGSM(Attack):
         r"""
         Overridden.
         """
-        images = images.clone().detach().to(self.device)
-        labels = labels.clone().detach().to(self.device)
+        images = images.clone().detach()
+        labels = labels.clone().detach()
 
         if self._targeted:
             target_labels = self._get_target_label(images, labels)
