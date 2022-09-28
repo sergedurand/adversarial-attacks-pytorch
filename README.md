@@ -1,3 +1,12 @@
+# Difference with original repo:
+
+- Make device transfers optional. This allows to use torchattacks in multi-gpu adversarial training with pytorch-lightning.
+
+TODO:
+- [ ] Test
+- [ ] See what needs to be done for attacks that creates tensors.
+
+
 # Adversarial-Attacks-PyTorch
 
 <p>
