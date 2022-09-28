@@ -96,8 +96,8 @@ class Pixle(Attack):
 
         adv_images = []
 
-        images = images.clone().detach().to(self.device)
-        labels = labels.clone().detach().to(self.device)
+        images = images.clone().detach().to(self.device) if self.use_device else images.clone().detach()
+        labels = labels.clone().detach().to(self.device) if self.use_device else labels.clone().detach()
 
         bs, _, _, _ = images.shape
 
@@ -185,8 +185,8 @@ class Pixle(Attack):
 
         adv_images = []
 
-        images = images.clone().detach().to(self.device)
-        labels = labels.clone().detach().to(self.device)
+        images = images.clone().detach().to(self.device) if self.use_device else images.clone().detach()
+        labels = labels.clone().detach().to(self.device) if self.use_device else labels.clone().detach()
 
         bs, _, _, _ = images.shape
 

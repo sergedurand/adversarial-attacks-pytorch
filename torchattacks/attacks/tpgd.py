@@ -38,7 +38,7 @@ class TPGD(Attack):
         r"""
         Overridden.
         """
-        images = images.clone().detach().to(self.device)
+        images = images.clone().detach().to(self.device) if self.use_device else images.clone().detach()
         logit_ori = self.model(images).detach()
 
         adv_images = images + 0.001*torch.randn_like(images)

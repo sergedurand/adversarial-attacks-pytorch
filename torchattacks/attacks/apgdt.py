@@ -57,8 +57,8 @@ class APGDT(Attack):
         r"""
         Overridden.
         """
-        images = images.clone().detach().to(self.device)
-        labels = labels.clone().detach().to(self.device)
+        images = images.clone().detach().to(self.device) if self.use_device else images.clone().detach()
+        labels = labels.clone().detach().to(self.device) if self.use_device else labels.clone().detach()
         _, adv_images = self.perturb(images, labels, cheap=True)
 
         return adv_images

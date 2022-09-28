@@ -76,8 +76,8 @@ class PGDL2_RS(Attack):
         r"""
         Overridden.
         """
-        images = images.clone().detach().to(self.device)
-        labels = labels.clone().detach().to(self.device)
+        images = images.clone().detach().to(self.device) if self.use_device else images.clone().detach()
+        labels = labels.clone().detach().to(self.device) if self.use_device else labels.clone().detach()
         #expend the inputs over noise_batch_size
         shape = torch.Size([images.shape[0], self.noise_batch_size]) + images.shape[1:]
         inputs_exp = images.unsqueeze(1).expand(shape)

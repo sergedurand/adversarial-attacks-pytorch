@@ -56,8 +56,8 @@ class APGD(Attack):
         r"""
         Overridden.
         """
-        images = images.clone().detach().to(self.device)
-        labels = labels.clone().detach().to(self.device)
+        images = images.clone().detach().to(self.device) if self.use_device else images.clone().detach()
+        labels = labels.clone().detach().to(self.device) if self.use_device else labels.clone().detach()
         _, adv_images = self.perturb(images, labels, cheap=True)
 
         return adv_images
@@ -87,11 +87,22 @@ class APGD(Attack):
             print('parameters: ', self.steps, self.steps_2, self.steps_min, self.size_decr)
         
         if self.norm == 'Linf':
-            t = 2 * torch.rand(x.shape).to(self.device).detach() - 1
-            x_adv = x.detach() + self.eps * torch.ones([x.shape[0], 1, 1, 1]).to(self.device).detach() * t / (t.reshape([t.shape[0], -1]).abs().max(dim=1, keepdim=True)[0].reshape([-1, 1, 1, 1]))
+            t = 2 * torch.rand(x.shape).to(self.device).detach() - 1 \
+                if self.use_device else 2 * torch.rand(x.shape).detach() - 1
+            if self.use_device:
+                x_adv = x.detach() + self.eps * torch.ones([x.shape[0], 1, 1, 1]).to(self.device).detach() \
+                            * t / (t.reshape([t.shape[0], -1]).abs().max(dim=1, keepdim=True)[0].reshape([-1, 1, 1, 1]))
+            else:
+                x_adv = x.detach() + self.eps * torch.ones([x.shape[0], 1, 1, 1]).detach() \
+                        * t / (t.reshape([t.shape[0], -1]).abs().max(dim=1, keepdim=True)[0].reshape([-1, 1, 1, 1]))
         elif self.norm == 'L2':
-            t = torch.randn(x.shape).to(self.device).detach()
-            x_adv = x.detach() + self.eps * torch.ones([x.shape[0], 1, 1, 1]).to(self.device).detach() * t / ((t ** 2).sum(dim=(1, 2, 3), keepdim=True).sqrt() + 1e-12)
+            t = torch.randn(x.shape).to(self.device).detach() if self.use_device else torch.randn(x.shape).detach()
+            if self.use_device:
+                x_adv = x.detach() + self.eps * torch.ones([x.shape[0], 1, 1, 1]).to(self.device).detach() \
+                        * t / ((t ** 2).sum(dim=(1, 2, 3), keepdim=True).sqrt() + 1e-12)
+            else:
+                x_adv = x.detach() + self.eps * torch.ones([x.shape[0], 1, 1, 1]).detach() \
+                        * t / ((t ** 2).sum(dim=(1, 2, 3), keepdim=True).sqrt() + 1e-12)
         x_adv = x_adv.clamp(0., 1.)
         x_best = x_adv.clone()
         x_best_adv = x_adv.clone()
@@ -122,8 +133,12 @@ class APGD(Attack):
         acc = logits.detach().max(1)[1] == y
         acc_steps[0] = acc + 0
         loss_best = loss_indiv.detach().clone()
-        
-        step_size = self.eps * torch.ones([x.shape[0], 1, 1, 1]).to(self.device).detach() * torch.Tensor([2.0]).to(self.device).detach().reshape([1, 1, 1, 1])
+        if self.use_device:
+            step_size = self.eps * torch.ones([x.shape[0], 1, 1, 1]).to(self.device).detach() \
+                        * torch.Tensor([2.0]).to(self.device).detach().reshape([1, 1, 1, 1])
+        else:
+            step_size = self.eps * torch.ones([x.shape[0], 1, 1, 1]).detach() \
+                        * torch.Tensor([2.0]).detach().reshape([1, 1, 1, 1])
         x_adv_old = x_adv.clone()
         counter = 0
         k = self.steps_2 + 0

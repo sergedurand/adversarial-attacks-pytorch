@@ -43,9 +43,9 @@ class MultiAttack(Attack):
         Overridden.
         """
         batch_size = images.shape[0]
-        fails = torch.arange(batch_size).to(self.device)
-        final_images = images.clone().detach().to(self.device)
-        labels = labels.clone().detach().to(self.device)
+        fails = torch.arange(batch_size).to(self.device) if self.use_device else torch.arange(batch_size)
+        final_images = images.clone().detach().to(self.device) if self.use_device else images.clone().detach()
+        labels = labels.clone().detach().to(self.device) if self.use_device else labels.clone().detach()
 
         multi_atk_records = [batch_size]
 
@@ -59,7 +59,10 @@ class MultiAttack(Attack):
             wrongs = ~corrects
 
             succeeds = torch.masked_select(fails, wrongs)
-            succeeds_of_fails = torch.masked_select(torch.arange(fails.shape[0]).to(self.device), wrongs)
+            if self.use_device:
+                succeeds_of_fails = torch.masked_select(torch.arange(fails.shape[0]).to(self.device), wrongs)
+            else:
+                succeeds_of_fails = torch.masked_select(torch.arange(fails.shape[0]), wrongs)
 
             final_images[succeeds] = adv_images[succeeds_of_fails]
 

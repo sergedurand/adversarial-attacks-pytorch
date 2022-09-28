@@ -11,19 +11,22 @@ class Attack(object):
         It basically changes training mode to eval during attack process.
         To change this, please see `set_training_mode`.
     """
-    def __init__(self, name, model):
+
+    def __init__(self, name, model, use_device=True):
         r"""
         Initializes internal attack state.
 
         Arguments:
             name (str): name of attack.
             model (torch.nn.Module): model to attack.
+            use_device (bool): if False no device transfer is done by torchattacks.
         """
 
         self.attack = name
         self.model = model
         self.model_name = str(model).split("(")[0]
         self.device = next(model.parameters()).device
+        self.use_device = use_device
 
         self._attack_mode = 'default'
         self._targeted = False
@@ -187,16 +190,17 @@ class Attack(object):
                     outputs = self.model(adv_images)
                     _, pred = torch.max(outputs.data, 1)
                     total += labels.size(0)
-                    right_idx = (pred == labels.to(self.device))
+                    right_idx = (pred == labels.to(self.device)) if self.use_device else (pred == labels)
                     correct += right_idx.sum()
                     end = time.time()
-                    delta = (adv_images - images.to(self.device)).view(batch_size, -1)
+                    delta = (adv_images - images.to(self.device)) if self.use_device else (adv_images - images)
+                    delta = delta.view(batch_size, -1)
                     l2_distance.append(torch.norm(delta[~right_idx], p=2, dim=1))
 
                     rob_acc = 100 * float(correct) / total
                     l2 = torch.cat(l2_distance).mean().item()
-                    progress = (step+1)/total_batch*100
-                    elapsed_time = end-start
+                    progress = (step + 1) / total_batch * 100
+                    elapsed_time = end - start
                     if verbose:
                         self._save_print(progress, rob_acc, l2, elapsed_time, end='\r')
 
@@ -263,7 +267,7 @@ class Attack(object):
             _, t = torch.kthvalue(outputs[counter][l], self._kth_min)
             target_labels[counter] = l[t]
 
-        return target_labels.long().to(self.device)
+        return target_labels.long().to(self.device) if self.use_device else target_labels.long()
 
     @torch.no_grad()
     def _get_random_target_label(self, images, labels=None):
@@ -276,17 +280,18 @@ class Attack(object):
         for counter in range(labels.shape[0]):
             l = list(range(n_classses))
             l.remove(labels[counter])
-            t = (len(l)*torch.rand([1])).long().to(self.device)
+            t = (len(l) * torch.rand([1])).long().to(self.device) if self.use_device else (
+                        len(l) * torch.rand([1])).long()
             target_labels[counter] = l[t]
 
-        return target_labels.long().to(self.device)
+        return target_labels.long().to(self.device) if self.use_device else target_labels.long()
 
     def _to_uint(self, images):
         r"""
         Function for changing the return type.
         Return images as int.
         """
-        return (images*255).type(torch.uint8)
+        return (images * 255).type(torch.uint8)
 
     def __str__(self):
         info = self.__dict__.copy()

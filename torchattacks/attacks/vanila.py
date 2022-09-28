@@ -27,6 +27,6 @@ class VANILA(Attack):
         r"""
         Overridden.
         """
-        adv_images = images.clone().detach().to(self.device)
+        adv_images = images.clone().detach().to(self.device) if self.use_device else images.clone().detach()
 
         return adv_images

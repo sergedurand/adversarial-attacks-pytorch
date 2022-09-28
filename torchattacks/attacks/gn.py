@@ -30,7 +30,7 @@ class GN(Attack):
         r"""
         Overridden.
         """
-        images = images.clone().detach().to(self.device)
+        images = images.clone().detach().to(self.device) if self.use_device else images.clone().detach()
         adv_images = images + self.std*torch.randn_like(images)
         adv_images = torch.clamp(adv_images, min=0, max=1).detach()
 
